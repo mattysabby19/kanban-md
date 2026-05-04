@@ -14,6 +14,11 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Opt into Node.js 24 ahead of the June 2026 cutover so we don't depend on
+  # the deprecated Node 20 runtime when GitHub flips the default.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   build-test:
     name: Build & test

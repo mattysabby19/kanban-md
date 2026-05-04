@@ -1,0 +1,73 @@
+version: '3'
+
+# Local dev shortcuts. Mirrors the CI workflow so you can reproduce its checks
+# with a single command (`task ci`) before pushing.
+#
+# Install: https://taskfile.dev/installation/
+# Run `task` (no args) to list available targets.
+
+vars:
+  CONFIG: '{{.CONFIG | default "Debug"}}'
+
+tasks:
+  default:
+    desc: List available tasks
+    silent: true
+    cmds:
+      - task --list
+
+  restore:
+    desc: Restore NuGet packages
+    cmds:
+      - dotnet restore
+
+  build:
+    desc: Build the solution (CONFIG=Debug|Release, default Debug)
+    deps: [restore]
+    cmds:
+      - dotnet build --configuration {{.CONFIG}} --no-restore
+
+  test:
+    desc: Run all tests
+    deps: [build]
+    cmds:
+      - dotnet test --configuration {{.CONFIG}} --no-build
+
+  run:
+    desc: Run the Blazor app locally
+    deps: [build]
+    cmds:
+      - dotnet run --project src/Kanban.Md.App --configuration {{.CONFIG}} --no-build
+
+  format:
+    desc: Apply code formatter
+    cmds:
+      - dotnet format
+
+  format-check:
+    desc: Verify formatting without modifying files
+    cmds:
+      - dotnet format --verify-no-changes
+
+  ci:
+    desc: Reproduce the CI pipeline locally (format-check, build, test)
+    cmds:
+      - task: format-check
+      - task: build
+        vars: { CONFIG: Release }
+      - task: test
+        vars: { CONFIG: Release }
+
+  pack:
+    desc: Pack the dotnet global tool (Kanban.Md.Cli)
+    cmds:
+      - dotnet pack src/Kanban.Md.Cli --configuration Release --output ./artifacts
+
+  clean:
+    desc: Remove build outputs
+    cmds:
+      - dotnet clean
+      - cmd: rm -rf artifacts
+        platforms: [linux, darwin]
+      - cmd: powershell -Command "if (Test-Path artifacts) { Remove-Item -Recurse -Force artifacts }"
+        platforms: [windows]
