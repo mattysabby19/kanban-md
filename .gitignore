@@ -1,0 +1,61 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]uild/
+artifacts/
+TestResults/
+*.coverage
+*.coveragexml
+coverage*.json
+coverage*.xml
+coverage*.info
+
+## Tool/IDE
+.vs/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+.idea/
+*.swp
+*~
+
+## OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+## Secrets / env
+*.env
+*.env.local
+.env.*
+!.env.example
+appsettings.Local.json
+appsettings.Development.json
+secrets.json
+
+## Node (for docs site, when added)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+## MkDocs
+/site/
+
+## Logs
+*.log
+logs/
+
+## Misc
+*.bak
+*.tmp

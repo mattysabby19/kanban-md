@@ -1,0 +1,37 @@
+# Default to LF line endings; let git handle conversion
+* text=auto eol=lf
+
+# Force CRLF for solution files (Visual Studio expects this)
+*.sln text eol=crlf
+
+# Source files: LF
+*.cs       text eol=lf
+*.csproj   text eol=lf
+*.props    text eol=lf
+*.targets  text eol=lf
+*.json     text eol=lf
+*.yml      text eol=lf
+*.yaml     text eol=lf
+*.md       text eol=lf
+*.razor    text eol=lf
+*.cshtml   text eol=lf
+*.css      text eol=lf
+*.js       text eol=lf
+*.ts       text eol=lf
+*.html     text eol=lf
+*.sh       text eol=lf
+Dockerfile text eol=lf
+
+# PowerShell scripts: CRLF (Windows-native)
+*.ps1 text eol=crlf
+
+# Binaries
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.dll  binary
+*.exe  binary
+*.zip  binary

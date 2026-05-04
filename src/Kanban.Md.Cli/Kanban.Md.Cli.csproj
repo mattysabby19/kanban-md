@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Kanban.Md.Cli</RootNamespace>
+    <AssemblyName>kanban</AssemblyName>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>kanban</ToolCommandName>
+    <PackageId>Kanban.Md.Cli</PackageId>
+    <Version>0.1.0-alpha</Version>
+    <Description>Markdown-driven Kanban board. Run `kanban serve` against a directory of task .md files.</Description>
+    <PackageTags>kanban;markdown;dotnet-tool;blazor</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IncludeBuildOutput>true</IncludeBuildOutput>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kanban.Md.App\Kanban.Md.App.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
