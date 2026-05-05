@@ -1,7 +1,99 @@
-﻿@page "/"
+@page "/"
+@using Kanban.Md.App.Models
+@using Kanban.Md.App.Services
+@inject TaskRepository Repo
+@inject TaskRepositoryOptions Options
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Board — kanban-md</PageTitle>
 
-<h1>Hello, world!</h1>
+<header class="board-header">
+    <h1>kanban-md</h1>
+    <span class="board-source" title="Tasks directory">@Options.Directory</span>
+</header>
 
-Welcome to your new app.
+@if (_error is not null)
+{
+    <div class="board-error">
+        <strong>Failed to load tasks.</strong>
+        <pre>@_error</pre>
+    </div>
+}
+else if (_tasks is null)
+{
+    <p>Loading…</p>
+}
+else if (_tasks.Count == 0)
+{
+    <p class="board-empty">No tasks found in <code>@Options.Directory</code>.</p>
+}
+else
+{
+    <section class="board">
+        @foreach (var status in _columns)
+        {
+            var tasksInColumn = _tasks.Where(t => t.Status == status).ToList();
+            <div class="board-column">
+                <header class="column-header">
+                    <span class="column-title">@status</span>
+                    <span class="column-count">@tasksInColumn.Count</span>
+                </header>
+                <div class="column-body">
+                    @foreach (var task in tasksInColumn)
+                    {
+                        <article class="card priority-@task.Priority.ToString().ToLowerInvariant()">
+                            <div class="card-meta">
+                                <span class="card-id">@task.Id</span>
+                                <span class="badge badge-priority">@task.Priority</span>
+                                <span class="badge badge-effort">@task.Effort</span>
+                            </div>
+                            <div class="card-title">@task.Title</div>
+                            @if (task.Labels.Count > 0)
+                            {
+                                <div class="card-labels">
+                                    @foreach (var label in task.Labels)
+                                    {
+                                        <span class="label">@label</span>
+                                    }
+                                </div>
+                            }
+                            <div class="card-footer">
+                                <span class="card-epic">@task.Epic</span>
+                                @if (task.Assignee is not null)
+                                {
+                                    <span class="card-assignee">@task.Assignee</span>
+                                }
+                            </div>
+                        </article>
+                    }
+                </div>
+            </div>
+        }
+    </section>
+}
+
+@code {
+    private static readonly KanbanStatus[] _columns =
+    {
+        KanbanStatus.Backlog,
+        KanbanStatus.Todo,
+        KanbanStatus.InProgress,
+        KanbanStatus.Review,
+        KanbanStatus.Done,
+        KanbanStatus.Blocked,
+    };
+
+    private IReadOnlyList<KanbanTask>? _tasks;
+    private string? _error;
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            _tasks = Repo.LoadAll();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.ToString();
+        }
+    }
+}

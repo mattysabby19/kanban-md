@@ -1,23 +1,28 @@
 using Kanban.Md.App.Components;
+using Kanban.Md.App.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddRazorComponents()
+builder.Services
+    .AddRazorComponents()
     .AddInteractiveServerComponents();
+
+var tasksPath = builder.Configuration["KanbanMd:TasksPath"]
+    ?? Path.Combine("..", "..", "samples", "minimal", "tasks");
+
+builder.Services.AddSingleton(new TaskRepositoryOptions(tasksPath));
+builder.Services.AddSingleton<MarkdownFrontMatterParser>();
+builder.Services.AddSingleton<TaskRepository>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 app.UseAntiforgery();
 
