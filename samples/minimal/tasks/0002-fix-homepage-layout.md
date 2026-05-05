@@ -7,10 +7,13 @@ epic: E2-UX
 priority: P0
 effort: S
 assignee: founder
-labels: [bug, frontend, mobile]
+labels:
+- bug
+- frontend
+- mobile
 dependencies: []
 created: 2026-05-02
-updated: 2026-05-04
+updated: 2026-05-05
 ---
 
 ## Description

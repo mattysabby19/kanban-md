@@ -182,4 +182,133 @@ public class MarkdownFrontMatterParserTests
         Assert.Equal("2026-Q2-S3", task.ExtraFields["sprint"]);
         Assert.Equal("4", task.ExtraFields["estimated_hours"]);
     }
+
+    [Fact]
+    public void Serialize_StartsAndEndsFrontMatterWithDelimiter()
+    {
+        var task = _sut.Parse(MinimalRaw);
+        var output = _sut.Serialize(task);
+
+        Assert.StartsWith("---\n", output, StringComparison.Ordinal);
+        Assert.Contains("\n---\n", output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Serialize_RoundTrip_PreservesAllStrongTypedFields()
+    {
+        var raw = """
+            ---
+            schema: 1
+            id: NGAP-0001
+            title: Replace stub README
+            status: InProgress
+            epic: E1-Hygiene
+            priority: P0
+            effort: M
+            assignee: founder
+            labels: [docs, onboarding]
+            dependencies: [NGAP-0002]
+            created: 2026-05-04
+            updated: 2026-05-04
+            ---
+
+            body
+            """;
+        var original = _sut.Parse(raw);
+
+        var roundTripped = _sut.Parse(_sut.Serialize(original));
+
+        Assert.Equal(original.Schema, roundTripped.Schema);
+        Assert.Equal(original.Id, roundTripped.Id);
+        Assert.Equal(original.Title, roundTripped.Title);
+        Assert.Equal(original.Status, roundTripped.Status);
+        Assert.Equal(original.Epic, roundTripped.Epic);
+        Assert.Equal(original.Priority, roundTripped.Priority);
+        Assert.Equal(original.Effort, roundTripped.Effort);
+        Assert.Equal(original.Assignee, roundTripped.Assignee);
+        Assert.Equal(original.Labels, roundTripped.Labels);
+        Assert.Equal(original.Dependencies, roundTripped.Dependencies);
+        Assert.Equal(original.Created, roundTripped.Created);
+        Assert.Equal(original.Updated, roundTripped.Updated);
+    }
+
+    [Fact]
+    public void Serialize_PreservesBodyVerbatim()
+    {
+        var raw = """
+            ---
+            schema: 1
+            id: T-1
+            title: t
+            status: Todo
+            epic: E
+            priority: P0
+            effort: S
+            created: 2026-05-04
+            updated: 2026-05-04
+            ---
+
+            ## Heading
+
+            paragraph
+
+            - item
+            """;
+        var task = _sut.Parse(raw);
+
+        var roundTripped = _sut.Parse(_sut.Serialize(task));
+
+        Assert.Equal(task.Body, roundTripped.Body);
+    }
+
+    [Fact]
+    public void Serialize_RoundTripsExtraFields()
+    {
+        var raw = """
+            ---
+            schema: 1
+            id: T-1
+            title: t
+            status: Todo
+            epic: E
+            priority: P0
+            effort: S
+            created: 2026-05-04
+            updated: 2026-05-04
+            sprint: 2026-Q2-S3
+            ---
+
+            body
+            """;
+        var task = _sut.Parse(raw);
+
+        var roundTripped = _sut.Parse(_sut.Serialize(task));
+
+        Assert.Equal("2026-Q2-S3", roundTripped.ExtraFields["sprint"]);
+    }
+
+    [Fact]
+    public void Serialize_AfterStatusChange_OtherFieldsUnchanged()
+    {
+        var original = _sut.Parse(MinimalRaw);
+        var moved = original with { Status = KanbanStatus.Done };
+
+        var roundTripped = _sut.Parse(_sut.Serialize(moved));
+
+        Assert.Equal(KanbanStatus.Done, roundTripped.Status);
+        Assert.Equal(original.Id, roundTripped.Id);
+        Assert.Equal(original.Title, roundTripped.Title);
+        Assert.Equal(original.Body, roundTripped.Body);
+    }
+
+    [Fact]
+    public void Serialize_WithNullAssignee_OmitsField()
+    {
+        var task = _sut.Parse(MinimalRaw);  // MinimalRaw has no assignee
+        Assert.Null(task.Assignee);
+
+        var output = _sut.Serialize(task);
+
+        Assert.DoesNotContain("assignee:", output, StringComparison.Ordinal);
+    }
 }

@@ -1,8 +1,11 @@
 @page "/"
 @using Kanban.Md.App.Models
 @using Kanban.Md.App.Services
+@using Microsoft.JSInterop
 @inject TaskRepository Repo
 @inject TaskRepositoryOptions Options
+@inject IJSRuntime JS
+@implements IAsyncDisposable
 
 <PageTitle>Board — kanban-md</PageTitle>
 
@@ -14,11 +17,11 @@
 @if (_error is not null)
 {
     <div class="board-error">
-        <strong>Failed to load tasks.</strong>
+        <strong>Failed to load or save tasks.</strong>
         <pre>@_error</pre>
     </div>
 }
-else if (_tasks is null)
+@if (_tasks is null)
 {
     <p>Loading…</p>
 }
@@ -37,10 +40,12 @@ else
                     <span class="column-title">@status</span>
                     <span class="column-count">@tasksInColumn.Count</span>
                 </header>
-                <div class="column-body">
+                <div class="column-body" id="col-@status" data-column-status="@status">
                     @foreach (var task in tasksInColumn)
                     {
-                        <article class="card priority-@task.Priority.ToString().ToLowerInvariant()">
+                        <article class="card priority-@task.Priority.ToString().ToLowerInvariant()"
+                                 data-task-id="@task.Id"
+                                 @key="task.Id">
                             <div class="card-meta">
                                 <span class="card-id">@task.Id</span>
                                 <span class="badge badge-priority">@task.Priority</span>
@@ -84,6 +89,8 @@ else
 
     private IReadOnlyList<KanbanTask>? _tasks;
     private string? _error;
+    private DotNetObjectReference<Home>? _objRef;
+    private bool _dndInitialized;
 
     protected override void OnInitialized()
     {
@@ -95,5 +102,65 @@ else
         {
             _error = ex.ToString();
         }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_dndInitialized && _tasks is not null && _tasks.Count > 0)
+        {
+            _objRef = DotNetObjectReference.Create(this);
+            var columnIds = _columns.Select(s => $"col-{s}").ToArray();
+            await JS.InvokeVoidAsync("kanbanInit", _objRef, columnIds);
+            _dndInitialized = true;
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnTaskMovedAsync(string taskId, string newStatusName)
+    {
+        if (_tasks is null)
+        {
+            return;
+        }
+
+        var task = _tasks.FirstOrDefault(t => t.Id == taskId);
+        if (task is null)
+        {
+            return;
+        }
+
+        if (!Enum.TryParse<KanbanStatus>(newStatusName, ignoreCase: false, out var newStatus))
+        {
+            return;
+        }
+
+        if (task.Status == newStatus)
+        {
+            return;
+        }
+
+        try
+        {
+            var updated = task with
+            {
+                Status = newStatus,
+                Updated = DateOnly.FromDateTime(DateTime.UtcNow.Date),
+            };
+            Repo.Save(updated);
+            _tasks = Repo.LoadAll();
+            _error = null;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.ToString();
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        _objRef?.Dispose();
+        return ValueTask.CompletedTask;
     }
 }

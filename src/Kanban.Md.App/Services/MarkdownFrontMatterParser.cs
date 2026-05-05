@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using Kanban.Md.App.Models;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -10,6 +11,11 @@ public class MarkdownFrontMatterParser
     private static readonly IDeserializer Deserializer = new DeserializerBuilder()
         .WithNamingConvention(CamelCaseNamingConvention.Instance)
         .IgnoreUnmatchedProperties()
+        .Build();
+
+    private static readonly ISerializer Serializer = new SerializerBuilder()
+        .WithNamingConvention(CamelCaseNamingConvention.Instance)
+        .DisableAliases()
         .Build();
 
     private static readonly HashSet<string> KnownKeys = new(StringComparer.OrdinalIgnoreCase)
@@ -76,6 +82,47 @@ public class MarkdownFrontMatterParser
 
     private static string Required(string? value, string field) =>
         value ?? throw new FormatException($"Missing required field: '{field}'.");
+
+    public string Serialize(KanbanTask task)
+    {
+        // Build front-matter as an ordered dictionary so we control field
+        // ordering. Insertion order is preserved by Dictionary in practice,
+        // and YamlDotNet emits map entries in iteration order.
+        var dict = new Dictionary<string, object?>(StringComparer.Ordinal)
+        {
+            ["schema"] = task.Schema,
+            ["id"] = task.Id,
+            ["title"] = task.Title,
+            ["status"] = task.Status.ToString(),
+            ["epic"] = task.Epic,
+            ["priority"] = task.Priority.ToString(),
+            ["effort"] = task.Effort.ToString(),
+        };
+        if (task.Assignee is not null)
+        {
+            dict["assignee"] = task.Assignee;
+        }
+        dict["labels"] = task.Labels;
+        dict["dependencies"] = task.Dependencies;
+        dict["created"] = task.Created.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        dict["updated"] = task.Updated.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+        // Append unknown keys preserved during Parse, not already present above.
+        foreach (var (key, value) in task.ExtraFields)
+        {
+            if (!dict.ContainsKey(key))
+            {
+                dict[key] = value;
+            }
+        }
+
+        var sb = new StringBuilder();
+        sb.Append("---\n");
+        sb.Append(Serializer.Serialize(dict));
+        sb.Append("---\n");
+        sb.Append(task.Body);
+        return sb.ToString();
+    }
 
     private sealed class FrontMatterDto
     {

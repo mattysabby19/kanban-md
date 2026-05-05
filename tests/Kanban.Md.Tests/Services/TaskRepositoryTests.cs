@@ -83,6 +83,87 @@ public sealed class TaskRepositoryTests : IDisposable
         Assert.Equal(first, second);
     }
 
+    [Fact]
+    public void Save_PersistsUpdatedTaskToOriginalFile()
+    {
+        WriteTask("a.md", "A-1", "Original title", KanbanStatus.Todo);
+        var task = _sut.LoadAll().Single();
+        var moved = task with { Status = KanbanStatus.Done };
+
+        _sut.Save(moved);
+
+        var reloaded = _sut.LoadAll().Single();
+        Assert.Equal(KanbanStatus.Done, reloaded.Status);
+        Assert.Equal("A-1", reloaded.Id);
+    }
+
+    [Fact]
+    public void Save_DoesNotChangeTheFileName()
+    {
+        WriteTask("custom-name.md", "A-1", "t", KanbanStatus.Todo);
+        var task = _sut.LoadAll().Single();
+        var moved = task with { Status = KanbanStatus.InProgress };
+
+        _sut.Save(moved);
+
+        Assert.True(File.Exists(Path.Combine(_tempDir, "custom-name.md")));
+        Assert.Single(Directory.GetFiles(_tempDir, "*.md"));
+    }
+
+    [Fact]
+    public void Save_LeavesNoLingeringTempFile()
+    {
+        WriteTask("a.md", "A-1", "t", KanbanStatus.Todo);
+        var task = _sut.LoadAll().Single();
+
+        _sut.Save(task with { Status = KanbanStatus.Done });
+
+        Assert.Empty(Directory.GetFiles(_tempDir, "*.tmp"));
+    }
+
+    [Fact]
+    public void Save_WithUnknownTaskId_Throws()
+    {
+        WriteTask("a.md", "A-1", "t", KanbanStatus.Todo);
+        _sut.LoadAll();
+
+        var stranger = new KanbanTask
+        {
+            Schema = 1,
+            Id = "UNKNOWN-9999",
+            Title = "x",
+            Status = KanbanStatus.Todo,
+            Epic = "E",
+            Priority = Priority.P0,
+            Effort = Effort.S,
+            Created = new DateOnly(2026, 5, 4),
+            Updated = new DateOnly(2026, 5, 4),
+        };
+
+        Assert.Throws<InvalidOperationException>(() => _sut.Save(stranger));
+    }
+
+    [Fact]
+    public void Save_BeforeLoadAll_Throws()
+    {
+        WriteTask("a.md", "A-1", "t", KanbanStatus.Todo);
+        // Note: not calling LoadAll, so the id→path map is empty.
+        var task = new KanbanTask
+        {
+            Schema = 1,
+            Id = "A-1",
+            Title = "t",
+            Status = KanbanStatus.Done,
+            Epic = "E",
+            Priority = Priority.P0,
+            Effort = Effort.S,
+            Created = new DateOnly(2026, 5, 4),
+            Updated = new DateOnly(2026, 5, 4),
+        };
+
+        Assert.Throws<InvalidOperationException>(() => _sut.Save(task));
+    }
+
     private void WriteTask(string filename, string id, string title, KanbanStatus status)
     {
         var content = $"""
