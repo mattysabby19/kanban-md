@@ -2,7 +2,7 @@
 @using Kanban.Md.App.Models
 @using Kanban.Md.App.Services
 @using Microsoft.JSInterop
-@inject TaskRepository Repo
+@inject BoardStateService State
 @inject TaskRepositoryOptions Options
 @inject IJSRuntime JS
 @implements IAsyncDisposable
@@ -94,14 +94,17 @@ else
 
     protected override void OnInitialized()
     {
-        try
-        {
-            _tasks = Repo.LoadAll();
-        }
-        catch (Exception ex)
-        {
-            _error = ex.ToString();
-        }
+        _tasks = State.Current;
+        State.Changed += OnStateChanged;
+    }
+
+    private void OnStateChanged()
+    {
+        // Fired by the file watcher (or by our own Save call). The handler
+        // may run on a thread-pool thread, so marshal the StateHasChanged
+        // call back onto the renderer's sync context via InvokeAsync.
+        _tasks = State.Current;
+        _ = InvokeAsync(StateHasChanged);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -146,20 +149,19 @@ else
                 Status = newStatus,
                 Updated = DateOnly.FromDateTime(DateTime.UtcNow.Date),
             };
-            Repo.Save(updated);
-            _tasks = Repo.LoadAll();
+            State.Save(updated);  // raises Changed → OnStateChanged → re-render
             _error = null;
         }
         catch (Exception ex)
         {
             _error = ex.ToString();
+            await InvokeAsync(StateHasChanged);
         }
-
-        await InvokeAsync(StateHasChanged);
     }
 
     public ValueTask DisposeAsync()
     {
+        State.Changed -= OnStateChanged;
         _objRef?.Dispose();
         return ValueTask.CompletedTask;
     }

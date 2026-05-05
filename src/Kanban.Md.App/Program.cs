@@ -13,6 +13,8 @@ var tasksPath = builder.Configuration["KanbanMd:TasksPath"]
 builder.Services.AddSingleton(new TaskRepositoryOptions(tasksPath));
 builder.Services.AddSingleton<MarkdownFrontMatterParser>();
 builder.Services.AddSingleton<TaskRepository>();
+builder.Services.AddSingleton<BoardStateService>();
+builder.Services.AddHostedService<TaskFileWatcher>();
 
 var app = builder.Build();
 

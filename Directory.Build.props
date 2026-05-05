@@ -10,7 +10,13 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AnalysisLevel>latest-recommended</AnalysisLevel>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <NoWarn>
+      $(NoWarn);
+      CS1591;
+      <!-- CA1848 demands LoggerMessage.Define for every log call. For cold error paths
+           the perf delta is negligible and the boilerplate hurts readability. -->
+      CA1848
+    </NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>

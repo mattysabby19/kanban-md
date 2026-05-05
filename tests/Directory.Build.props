@@ -12,7 +12,11 @@
         CA1812 — DTOs / fixtures may appear unused to analyzers but are wired by xUnit.
         CA2007 — ConfigureAwait(false) is not relevant in test code.
     -->
-    <NoWarn>$(NoWarn);CA1707;CA1861;CA1812;CA2007</NoWarn>
+    <!--
+      CA1001 — xUnit's IAsyncLifetime *is* the disposal mechanism; a separate
+      IDisposable implementation would be redundant and confusing.
+    -->
+    <NoWarn>$(NoWarn);CA1707;CA1861;CA1812;CA2007;CA1001</NoWarn>
   </PropertyGroup>
 
 </Project>
