@@ -1,0 +1,18 @@
+<Project>
+
+  <!-- Inherit the root Directory.Build.props (strict warnings, nullable, etc.) -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <!--
+      Test-specific analyzer relaxations. These rules conflict with idiomatic
+      test code:
+        CA1707 — xUnit convention names tests Method_State_Outcome with underscores.
+        CA1861 — one-shot test arrays don't need static-readonly hoisting.
+        CA1812 — DTOs / fixtures may appear unused to analyzers but are wired by xUnit.
+        CA2007 — ConfigureAwait(false) is not relevant in test code.
+    -->
+    <NoWarn>$(NoWarn);CA1707;CA1861;CA1812;CA2007</NoWarn>
+  </PropertyGroup>
+
+</Project>
