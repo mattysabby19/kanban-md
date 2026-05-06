@@ -13,10 +13,21 @@ A Kanban board for projects whose tasks live as markdown files in git.
 The board reads `*.md` task files from a directory you mount into the
 container at `/data`. A working sample lives in `samples/minimal/tasks/`.
 
+> While `v0.1.x` is pre-release the GHCR package is private and only
+> versioned tags exist (no `:latest`). Authenticate once with a PAT that
+> has `read:packages`, and pin to the explicit version:
+>
+> ```bash
+> docker login ghcr.io -u <github-user> -p <pat>
+> ```
+>
+> Both steps go away once a stable `v0.1.0` is cut (the `:latest` tag
+> appears) and the package is made public.
+
 ```bash
 docker run --rm -p 8090:8090 \
   -v "$(pwd)/samples/minimal/tasks:/data" \
-  ghcr.io/mattysabby19/kanban-md:latest
+  ghcr.io/mattysabby19/kanban-md:0.1.0-alpha
 ```
 
 Then open http://localhost:8090.
@@ -26,7 +37,7 @@ PowerShell equivalent:
 ```powershell
 docker run --rm -p 8090:8090 `
   -v "${PWD}/samples/minimal/tasks:/data" `
-  ghcr.io/mattysabby19/kanban-md:latest
+  ghcr.io/mattysabby19/kanban-md:0.1.0-alpha
 ```
 
 ### Drag-drop persistence
