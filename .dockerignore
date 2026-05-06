@@ -1,0 +1,35 @@
+# Build artifacts
+**/bin/
+**/obj/
+artifacts/
+**/TestResults/
+**/*.user
+
+# Version control
+.git/
+.gitignore
+.gitattributes
+
+# IDE / editor
+.vs/
+.vscode/
+.idea/
+*.suo
+
+# CI / tooling
+.github/
+Taskfile.yml
+
+# Docs
+*.md
+LICENSE
+docs/
+samples/
+mkdocs.yml
+
+# Test projects (not needed for runtime image)
+tests/
+
+# Misc
+node_modules/
+*.log

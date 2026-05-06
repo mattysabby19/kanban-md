@@ -6,7 +6,22 @@
     <AssemblyName>kanban</AssemblyName>
   </PropertyGroup>
 
+  <!--
+    Global-tool packaging is deferred (backlog: KMD-0031-followup).
+    Reason: Blazor Server's static web assets (wwwroot/* + _framework/*)
+    are only fully materialized by `dotnet publish`, not `dotnet build`,
+    so a naive `dotnet pack` produces a tool that boots without CSS / JS.
+    The Docker image (KMD-0030) is the primary distribution route and
+    publishes correctly. The tool route will be revisited once we wire
+    `dotnet publish` output into the nupkg.
+
+    Set EnableToolPack=true on the command line to opt back in for testing.
+  -->
   <PropertyGroup>
+    <EnableToolPack Condition="'$(EnableToolPack)' == ''">false</EnableToolPack>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(EnableToolPack)' == 'true'">
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>kanban</ToolCommandName>
     <PackageId>Kanban.Md.Cli</PackageId>
@@ -21,7 +36,7 @@
     <ProjectReference Include="..\Kanban.Md.App\Kanban.Md.App.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(EnableToolPack)' == 'true'">
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
