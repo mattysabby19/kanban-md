@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Repo migrated from `mattysabby19/kanban-md` to
+  `nga-payments-systems/kanban-md`. GitHub auto-redirects the old URL
+  for ~1 year. The `v0.1.0-alpha` tag was re-cut against the new
+  GHCR namespace; the published image is now at
+  `ghcr.io/nga-payments-systems/kanban-md:0.1.0-alpha`. The original
+  artefact under `mattysabby19/kanban-md`'s package registry will be
+  deleted in a follow-up step (Task F.5 of the migration plan).
+
 ## [0.1.0] - in progress
 
 ### Added

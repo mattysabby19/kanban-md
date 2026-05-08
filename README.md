@@ -27,7 +27,7 @@ container at `/data`. A working sample lives in `samples/minimal/tasks/`.
 ```bash
 docker run --rm -p 8090:8090 \
   -v "$(pwd)/samples/minimal/tasks:/data" \
-  ghcr.io/mattysabby19/kanban-md:0.1.0-alpha
+  ghcr.io/nga-payments-systems/kanban-md:0.1.0-alpha
 ```
 
 Then open http://localhost:8090.
@@ -37,7 +37,7 @@ PowerShell equivalent:
 ```powershell
 docker run --rm -p 8090:8090 `
   -v "${PWD}/samples/minimal/tasks:/data" `
-  ghcr.io/mattysabby19/kanban-md:0.1.0-alpha
+  ghcr.io/nga-payments-systems/kanban-md:0.1.0-alpha
 ```
 
 ### Drag-drop persistence
