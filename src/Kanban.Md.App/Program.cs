@@ -1,4 +1,5 @@
 using Kanban.Md.App.Services;
+using Microsoft.AspNetCore.DataProtection;
 
 // Alias avoids the namespace/type clash between `Kanban.Md.App` (this namespace)
 // and `Kanban.Md.App.Components.App` (the root Razor component).
@@ -19,6 +20,16 @@ public static class Program
         builder.Services
             .AddRazorComponents()
             .AddInteractiveServerComponents();
+
+        // Use an ephemeral data-protection keyring. kanban-md is a stateless
+        // visualization tool: no auth, no user sessions, no long-lived state
+        // worth surviving a container restart. The default keyring tries to
+        // persist to ~/.aspnet/DataProtection-Keys (ephemeral inside the
+        // container) and warns about it on every startup; declaring intent
+        // explicitly silences both warnings and matches the actual behavior.
+        // Antiforgery tokens for SignalR circuits remain protected within the
+        // process lifetime, which is all that's needed.
+        builder.Services.AddDataProtection().UseEphemeralDataProtectionProvider();
 
         builder.Services.AddHealthChecks();
 
